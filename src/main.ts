@@ -204,9 +204,10 @@ export default class MeetingAssistantPlugin extends Plugin {
     let transcriptionText: string | undefined;
     let transcriptionResult: import('./types/services').TranscriptionResult | undefined;
 
+    const sttNeedsApiKey = this.settings.sttProvider !== 'moonshine';
     if (
       this.settings.autoTranscribe &&
-      this.settings.sttApiKey &&
+      (!sttNeedsApiKey || this.settings.sttApiKey) &&
       audioBlob
     ) {
       try {
@@ -243,9 +244,10 @@ export default class MeetingAssistantPlugin extends Plugin {
     // Step 3: LLM 纪要生成
     let summaryMarkdown: string | undefined;
 
+    const llmNeedsApiKey = this.settings.llmProvider !== 'ollama';
     if (
       this.settings.autoSummarize &&
-      this.settings.llmApiKey &&
+      (!llmNeedsApiKey || this.settings.llmApiKey) &&
       transcriptionResult
     ) {
       try {
