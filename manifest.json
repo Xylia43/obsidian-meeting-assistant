@@ -1,0 +1,9 @@
+{
+  "id": "obsidian-meeting-assistant",
+  "name": "Meeting Assistant",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "会议助手 - 录音、AI转写、智能笔记生成",
+  "author": "Meeting Assistant Team",
+  "isDesktopOnly": true
+}

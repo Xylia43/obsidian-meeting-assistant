@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc -noEmit -skipLibCheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify output
+        run: |
+          test -f main.js || (echo "❌ main.js not found after build" && exit 1)
+          test -f manifest.json || (echo "❌ manifest.json not found" && exit 1)
+          echo "✅ Build artifacts verified"
+
+      - name: Get version from tag
+        id: tag
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate manifest version
+        run: |
+          MANIFEST_VERSION=$(jq -r '.version' manifest.json)
+          TAG_VERSION="${{ steps.tag.outputs.version }}"
+          if [ "$MANIFEST_VERSION" != "$TAG_VERSION" ]; then
+            echo "⚠️  Warning: manifest.json version ($MANIFEST_VERSION) does not match tag ($TAG_VERSION)"
+          fi
+
+      - name: Collect release assets
+        run: |
+          mkdir -p release-assets
+          cp main.js release-assets/
+          cp manifest.json release-assets/
+          if [ -f styles.css ]; then
+            cp styles.css release-assets/
+            echo "✅ styles.css included"
+          else
+            echo "ℹ️  No styles.css found, skipping"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "v${{ steps.tag.outputs.version }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release-assets/main.js
+            release-assets/manifest.json
+            release-assets/styles.css
+          fail_on_unmatched_files: false
