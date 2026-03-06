@@ -14,6 +14,20 @@ Moonshine 是一个完全免费的本地语音识别模型，准确率超过 Whi
 
 ## 安装步骤
 
+### 0. 安装 FFmpeg（必需）
+
+Moonshine 服务需要 FFmpeg 来转换音频格式。
+
+**Mac (Homebrew):**
+```bash
+brew install ffmpeg
+```
+
+**验证安装:**
+```bash
+ffmpeg -version
+```
+
 ### 1. 安装 Python 依赖
 
 进入插件目录下的 `moonshine-server` 文件夹：
