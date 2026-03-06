@@ -211,7 +211,7 @@ export default class MeetingAssistantPlugin extends Plugin {
       audioBlob
     ) {
       try {
-        const transcribeNotice = new Notice('🔄 正在转写...', 0);
+        const transcribeNotice = new Notice('🔄 正在转写... 0%', 0);
 
         const sttProvider = createSTTProvider({
           provider: this.settings.sttProvider,
@@ -223,12 +223,27 @@ export default class MeetingAssistantPlugin extends Plugin {
 
         const audioArrayBuffer = await audioBlob.arrayBuffer();
 
-        transcriptionResult = await sttProvider.transcribe({
-          audioData: audioArrayBuffer,
-          fileName: 'recording.webm',
-          language: this.settings.sttLanguage || undefined,
-          enableDiarization: this.settings.enableDiarization,
-        });
+        // 添加进度回调
+        transcriptionResult = await sttProvider.transcribe(
+          {
+            audioData: audioArrayBuffer,
+            fileName: 'recording.webm',
+            language: this.settings.sttLanguage || undefined,
+            enableDiarization: this.settings.enableDiarization,
+          },
+          (progress) => {
+            // 更新进度提示
+            const stageText = {
+              uploading: '上传中',
+              transcribing: '转写中',
+              merging: '合并中',
+              done: '完成',
+            }[progress.stage];
+            transcribeNotice.setMessage(
+              `🔄 ${stageText}... ${progress.percent}%`
+            );
+          }
+        );
 
         transcriptionText = transcriptionResult.text;
         transcribeNotice.hide();
@@ -237,7 +252,13 @@ export default class MeetingAssistantPlugin extends Plugin {
         const msg =
           error instanceof Error ? error.message : 'Unknown error';
         console.error('[MeetingAssistant] STT failed:', error);
-        new Notice(`⚠️ 转写失败: ${msg}`);
+        
+        // 改进的错误提示
+        const helpText = this.getSTTErrorHelp(error);
+        new Notice(
+          `⚠️ 转写失败: ${msg}\n\n${helpText}`,
+          10000
+        );
       }
     }
 
@@ -277,7 +298,13 @@ export default class MeetingAssistantPlugin extends Plugin {
         const msg =
           error instanceof Error ? error.message : 'Unknown error';
         console.error('[MeetingAssistant] Summary generation failed:', error);
-        new Notice(`⚠️ 纪要生成失败: ${msg}`);
+        
+        // 改进的错误提示
+        const helpText = this.getLLMErrorHelp(error);
+        new Notice(
+          `⚠️ 纪要生成失败: ${msg}\n\n${helpText}`,
+          10000
+        );
       }
     }
 
@@ -356,6 +383,60 @@ export default class MeetingAssistantPlugin extends Plugin {
     if (bytes < 1024 * 1024)
       return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  /**
+   * 获取 STT 错误的帮助信息
+   */
+  private getSTTErrorHelp(error: unknown): string {
+    const errorMsg = error instanceof Error ? error.message.toLowerCase() : '';
+    
+    if (errorMsg.includes('api key') || errorMsg.includes('401')) {
+      return '💡 请检查:\n1. STT API Key 是否正确\n2. API Key 是否有效（未过期）';
+    }
+    
+    if (errorMsg.includes('rate limit') || errorMsg.includes('429')) {
+      return '💡 API 调用频率超限，请稍后重试';
+    }
+    
+    if (errorMsg.includes('network') || errorMsg.includes('timeout')) {
+      return '💡 请检查:\n1. 网络连接是否正常\n2. Base URL 是否正确\n3. 是否需要代理';
+    }
+    
+    if (errorMsg.includes('too large') || errorMsg.includes('size')) {
+      return '💡 音频文件过大，建议:\n1. 降低音频比特率\n2. 分段录音';
+    }
+    
+    return '💡 请检查:\n1. API 配置是否正确\n2. 网络连接是否正常\n3. 查看控制台获取详细错误';
+  }
+
+  /**
+   * 获取 LLM 错误的帮助信息
+   */
+  private getLLMErrorHelp(error: unknown): string {
+    const errorMsg = error instanceof Error ? error.message.toLowerCase() : '';
+    
+    if (errorMsg.includes('api key') || errorMsg.includes('401')) {
+      return '💡 请检查:\n1. LLM API Key 是否正确\n2. API Key 是否有效（未过期）';
+    }
+    
+    if (errorMsg.includes('rate limit') || errorMsg.includes('429')) {
+      return '💡 API 调用频率超限，请稍后重试';
+    }
+    
+    if (errorMsg.includes('model') || errorMsg.includes('404')) {
+      return '💡 请检查:\n1. 模型名称是否正确\n2. 该模型是否可用';
+    }
+    
+    if (errorMsg.includes('context') || errorMsg.includes('token')) {
+      return '💡 转写文本过长，建议:\n1. 缩短录音时长\n2. 使用更大上下文的模型';
+    }
+    
+    if (errorMsg.includes('network') || errorMsg.includes('timeout')) {
+      return '💡 请检查:\n1. 网络连接是否正常\n2. Base URL 是否正确\n3. 是否需要代理';
+    }
+    
+    return '💡 请检查:\n1. LLM 配置是否正确\n2. 网络连接是否正常\n3. 查看控制台获取详细错误';
   }
 }
 
