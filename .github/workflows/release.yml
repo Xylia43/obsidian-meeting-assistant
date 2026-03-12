@@ -67,13 +67,38 @@ jobs:
             echo "ℹ️  No styles.css found, skipping"
           fi
 
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # 获取上一个 tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -z "$PREV_TAG" ]; then
+            echo "changelog=首次发布 🎉" >> "$GITHUB_OUTPUT"
+          else
+            # 生成 changelog
+            CHANGELOG=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+            echo "changelog<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$CHANGELOG" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: "v${{ steps.tag.outputs.version }}"
           draft: false
           prerelease: false
-          generate_release_notes: true
+          body: |
+            ## 📦 Release v${{ steps.tag.outputs.version }}
+            
+            ### 🔄 Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### 📥 Installation
+            1. 下载 `main.js` 和 `manifest.json`
+            2. 放入 Obsidian vault 的 `.obsidian/plugins/obsidian-meeting-assistant/` 目录
+            3. 在 Obsidian 设置中启用插件
           files: |
             release-assets/main.js
             release-assets/manifest.json
