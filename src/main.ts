@@ -12,6 +12,7 @@ import {
   DEFAULT_SETTINGS,
   RecordingState,
 } from './types';
+import { validateSecureUrl, maskApiKey } from './utils/security';
 
 export default class MeetingAssistantPlugin extends Plugin {
   settings!: MeetingAssistantSettings;
@@ -457,6 +458,21 @@ class MeetingAssistantSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     containerEl.createEl('h2', { text: '会议助手设置' });
+    
+    // 隐私声明
+    const privacyNotice = containerEl.createDiv('setting-item-description');
+    privacyNotice.style.padding = '10px';
+    privacyNotice.style.backgroundColor = 'var(--background-secondary)';
+    privacyNotice.style.borderRadius = '5px';
+    privacyNotice.style.marginBottom = '20px';
+    privacyNotice.innerHTML = `
+      <strong>🔒 隐私声明</strong><br>
+      • 录音文件和转写文本存储在您的本地 Vault 中<br>
+      • 使用云端 API（OpenAI/Claude）时，音频和文本会发送到对应服务商<br>
+      • 使用本地方案（Moonshine + Ollama）时，所有数据完全本地处理<br>
+      • API Key 存储在本地，但建议定期更换以提高安全性
+    `;
+
 
     // ─── 基础设置 ─────────────────────────────────────────
 
@@ -570,6 +586,14 @@ class MeetingAssistantSettingTab extends PluginSettingTab {
           )
           .setValue(this.plugin.settings.sttBaseUrl)
           .onChange(async (value) => {
+            // HTTPS 验证
+            if (value && value.trim()) {
+              const validation = validateSecureUrl(value);
+              if (!validation.valid) {
+                new Notice(`⚠️ ${validation.error}`);
+                return;
+              }
+            }
             this.plugin.settings.sttBaseUrl =
               value || DEFAULT_SETTINGS.sttBaseUrl;
             await this.plugin.saveSettings();
@@ -641,6 +665,14 @@ class MeetingAssistantSettingTab extends PluginSettingTab {
           .setPlaceholder('https://api.openai.com/v1')
           .setValue(this.plugin.settings.llmBaseUrl)
           .onChange(async (value) => {
+            // HTTPS 验证
+            if (value && value.trim()) {
+              const validation = validateSecureUrl(value);
+              if (!validation.valid) {
+                new Notice(`⚠️ ${validation.error}`);
+                return;
+              }
+            }
             this.plugin.settings.llmBaseUrl =
               value || DEFAULT_SETTINGS.llmBaseUrl;
             await this.plugin.saveSettings();

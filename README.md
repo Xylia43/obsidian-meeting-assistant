@@ -35,7 +35,7 @@
 
 #### 方式一：手动安装
 
-1. 前往 [Releases](https://github.com/your-repo/obsidian-meeting-assistant/releases) 页面下载最新版本的 `main.js`、`manifest.json`
+1. 前往 [Releases](https://github.com/Xylia43/obsidian-meeting-assistant/releases) 页面下载最新版本的 `main.js`、`manifest.json`
 2. 在你的 Vault 目录下找到 `.obsidian/plugins/` 文件夹（如果没有则创建）
 3. 创建 `obsidian-meeting-assistant` 文件夹
 4. 将 `main.js` 和 `manifest.json` 复制到该文件夹中
@@ -54,7 +54,7 @@
 
 1. 安装 [BRAT 插件](https://github.com/TfTHacker/obsidian42-brat)
 2. 打开 BRAT 设置 → 点击 "Add Beta plugin"
-3. 输入仓库地址：`your-username/obsidian-meeting-assistant`
+3. 输入仓库地址：`Xylia43/obsidian-meeting-assistant`
 4. 点击 "Add Plugin" 并启用
 
 > 📖 更详细的安装说明请参阅 [docs/INSTALL.md](docs/INSTALL.md)
@@ -312,7 +312,7 @@ obsidian-meeting-assistant/
 
 #### Manual Installation
 
-1. Download `main.js` and `manifest.json` from the [Releases](https://github.com/your-repo/obsidian-meeting-assistant/releases) page
+1. Download `main.js` and `manifest.json` from the [Releases](https://github.com/Xylia43/obsidian-meeting-assistant/releases) page
 2. Create folder `your-vault/.obsidian/plugins/obsidian-meeting-assistant/`
 3. Copy the downloaded files into that folder
 4. Restart Obsidian → Settings → Community plugins → Enable "Meeting Assistant"
@@ -321,7 +321,7 @@ obsidian-meeting-assistant/
 
 1. Install the [BRAT plugin](https://github.com/TfTHacker/obsidian42-brat)
 2. Open BRAT settings → "Add Beta plugin"
-3. Enter repository: `your-username/obsidian-meeting-assistant`
+3. Enter repository: `Xylia43/obsidian-meeting-assistant`
 4. Click "Add Plugin" and enable it
 
 ### 🚀 Quick Start
